@@ -1,0 +1,69 @@
+# Python cache / compiled files
+
+**pycache**/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+
+venv/
+.venv/
+env/
+ENV/
+
+# Environment / secrets
+
+.env
+.env.*
+!.env.example
+
+# Git
+
+.git/
+.gitignore
+
+# Test / coverage / tooling caches
+
+.pytest_cache/
+.coverage
+coverage.xml
+htmlcov/
+.mypy_cache/
+.ruff_cache/
+.tox/
+.nox/
+
+# IDE / editor files
+
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+
+.DS_Store
+Thumbs.db
+
+# Build / packaging artifacts
+
+build/
+dist/
+*.egg-info/
+.eggs/
+pip-wheel-metadata/
+
+# Logs
+
+*.log
+
+# Local database / temp files
+
+*.sqlite3
+*.db
+tmp/
+temp/
+
+# Docker-related local files (optional)
+
+docker-compose.yml

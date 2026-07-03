@@ -1,0 +1,68 @@
+trigger:
+  branches:
+    include:
+      - Dev
+
+pool:
+  vmImage: ubuntu-latest
+
+resources:
+  repositories:
+    - repository: deploymentRepo
+      type: github
+      name: Satishkona-7/KlikGo_deployment_aws
+      endpoint: git_sc
+      ref: refs/heads/main
+
+variables:
+  acrLoginServer: klikgoacr.azurecr.io
+  imageRepository: auth-service
+  imageTag: $(Build.BuildId)
+  namespace: klikgo
+
+stages:
+  - stage: BuildAndPush
+    displayName: Build and Push Auth Image
+    jobs:
+      - job: BuildPush
+        displayName: Build and Push to ACR
+        steps:
+          - checkout: self
+
+          - task: Docker@2
+            displayName: Build and Push auth-service image
+            inputs:
+              containerRegistry: klikgo-acr-sc
+              repository: $(imageRepository)
+              command: buildAndPush
+              Dockerfile: $(Build.SourcesDirectory)/Dockerfile
+              buildContext: $(Build.SourcesDirectory)
+              tags: |
+                $(imageTag)
+
+  - stage: Deploy
+    displayName: Deploy Auth Service to AKS
+    dependsOn: BuildAndPush
+    jobs:
+      - deployment: DeployAuth
+        displayName: Deploy auth-service
+        environment: klikgo-aks
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - checkout: deploymentRepo
+
+                - task: KubernetesManifest@1
+                  displayName: Deploy auth-service manifests
+                  inputs:
+                    action: deploy
+                    kubernetesServiceConnection: klikgo-aks-sc
+                    namespace: $(namespace)
+                    manifests: |
+                      $(Pipeline.Workspace)/s/deploymentRepo/base/auth-service/configmap.yaml
+                      $(Pipeline.Workspace)/s/deploymentRepo/base/auth-service/secret.yaml
+                      $(Pipeline.Workspace)/s/deploymentRepo/base/auth-service/service.yaml
+                      $(Pipeline.Workspace)/s/deploymentRepo/base/auth-service/deployment.yaml
+                    containers: |
+                      $(acrLoginServer)/$(imageRepository):$(imageTag)
